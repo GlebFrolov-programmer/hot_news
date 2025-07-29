@@ -164,7 +164,7 @@ class TogetherAIHotNewsGenerator:
                 messages=messages,
                 response_format={"type": "json_object"},
                 temperature=0.1,
-                max_tokens=100000
+                max_tokens=25000
             )
             print(f'RESPONSE: {response.choices[0].message.content}')
             correct_response = self.parse_json_obj_from_llm(response.choices[0].message.content)

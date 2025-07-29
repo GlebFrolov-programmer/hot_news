@@ -48,8 +48,8 @@ model = 'Deepseek'
 # model_version = 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free'
 # model_version = 'deepseek-ai/DeepSeek-R1-0528'  # Норм, но долго работает и почему-то упирается в лимиты
 # model_version = 'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free'  # Норм, но маленькое контекстное окно (нужно будет бить по 3000 слов, если сплитануть по пробелу)
-model_version = 'deepseek-ai/DeepSeek-V3'  # Платная
-# model_version = 'Qwen/Qwen3-32B-FP8'  # Очень долго генерирует, но сама генерация вроде бы норм
+# model_version = 'deepseek-ai/DeepSeek-V3'  # Платная
+model_version = 'Qwen/Qwen3-32B-FP8'  # Очень долго генерирует, но сама генерация вроде бы норм
 llm = TogetherAIHotNewsGenerator(api_key=api_key, model=model, model_version=model_version)
 
 for region in regions:
@@ -64,7 +64,7 @@ for region in regions:
         # raw_data.to_excel(os.path.join(settings.OUTPUT_DIR_RAW, f'RAW_{category}_{region}_{period}_{month_begin}.xlsx'), index=False)
 
         # Шаг 2. Генерация тем из текстов
-        print('**** ГЕНЕРАЦИЯ ТЕМ ИЗ ТЕКСТОВ ****')
+        # print('**** ГЕНЕРАЦИЯ ТЕМ ИЗ ТЕКСТОВ ****')
         # data_topics = pd.read_excel(os.path.join(settings.OUTPUT_DIR_RAW, f'RAW_{category}_{region}_{period}_{month_begin}.xlsx'))
         # data_topics['model'] = model
         # tqdm.pandas()
