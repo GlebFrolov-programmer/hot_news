@@ -14,7 +14,9 @@ class Settings:
         'TAVILY_API_KEY': os.getenv("TAVILY_API_KEY"),
         'TELEGRAM_API_ID': os.getenv("TELEGRAM_API_ID"),
         'TELEGRAM_API_HASH': os.getenv("TELEGRAM_API_HASH"),
-        'PHONE_NUM': os.getenv("PHONE_NUM")
+        'PHONE_NUM': os.getenv("PHONE_NUM"),
+        'OPENROUTER_AI_MODEL': os.getenv("OPENROUTER_AI_MODEL"),
+        'TOGETHER_API_KEY': os.getenv("TOGETHER_API_KEY")
     }
 
     # Настройки парсеров
@@ -85,6 +87,7 @@ class Settings:
     OUTPUT_DIR_PROCESSED = os.path.join(OUTPUT_ABS_DIR, OUTPUT_DIR, "processed")
     OUTPUT_DIR_RAW = os.path.join(OUTPUT_ABS_DIR, OUTPUT_DIR, "raw")
     OUTPUT_DIR_TOPICS = os.path.join(OUTPUT_ABS_DIR, OUTPUT_DIR, "topics")
+    OUTPUT_DIR_CLUSTERS = os.path.join(OUTPUT_ABS_DIR, OUTPUT_DIR, "clusters")
 
 
 settings = Settings()

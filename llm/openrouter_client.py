@@ -1,30 +1,26 @@
 import json
 import re
-
-from langchain_community.chat_models.gigachat import GigaChat
-from langchain.schema import SystemMessage, HumanMessage
 import os
+import time
+
+from openai import OpenAI
 
 from config.settings import settings
 
 
-class GigaChatHotNewsGenerator:
-    def __init__(self, credentials, model):
+class OpenrouterHotNewsGenerator:
+    def __init__(self, api_key, model, model_version):
         """
         Инициализация с использованием LangChain
 
         :param credentials: Авторизационные данные (логин/пароль или токен)
         """
         self.model = model
-        self.credentials = credentials
-        self.llm = GigaChat(
-            credentials=credentials,
-            scope="GIGACHAT_API_PERS",
-            verify_ssl_certs=False,
-            model=model,
-            verbose=True,
-            temperature=0.1,
-            early_stopping_method="generate"
+        self.model_version = model_version
+        self.api_key = api_key
+        self.llm = OpenAI(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=api_key
         )
 
     def generate_topics(self, message: str, user_message: str = None, system_message: str = None) -> dict:
@@ -35,10 +31,12 @@ class GigaChatHotNewsGenerator:
         :param system_message: Системное сообщение (роль модели)
         :return: Ответ модели
         """
+
+        print(f'Генерируются  тезизы: {message[:100]}...')
         if not system_message:
             system_message = """
             Ты профессиональный аналитик, который умеет вычленять из текста самые важные темы, которые состоят из тезисов, инсайдов и другой крайне интересной информации.
-    
+
             Требования:  
             1. Если тезис касается конкретного объекта, в нем ДОЛЖНО быть указано НАЗВАНИЕ ОБЪЕКТА.   
             2. Тезисы должны быть самодостаточными: по каждому можно понять суть без дополнительной информации.  
@@ -47,7 +45,8 @@ class GigaChatHotNewsGenerator:
             5. Только интересная/значимая информация (не тривиальные факты).  
             6. ВЫВОДИ пустой json, если вообще нет подходящих тем или во всем тексте прослеживается какая-то реклама продукта.
             7. В полученных темах ОБЯЗАТЕЛЬНО должно говориться про регион "Нижегородская область" и тема "Недвижимость" (другие регионы и темы не интересуют).
-    
+            8. Отвечай строго на русском языке!
+
             Формат ответа (JSON):
                             ```json
                             {
@@ -60,35 +59,46 @@ class GigaChatHotNewsGenerator:
                              ```
             """
 
-            # print(system_message)
-
         if not user_message:
             user_message = "Проанализируй текст и выдели тезисы.\n Текст: " + message
 
         messages = [
-            SystemMessage(content=system_message),
-            HumanMessage(content=user_message)
+            {
+                "role": "system",
+                "content": system_message
+            },
+            {
+                "role": "user",
+                "content": user_message
+            }
         ]
 
         try:
-            response = self.llm(messages)
-            correct_response = self.parse_json_obj_from_llm(response.content)
+            response = self.llm.chat.completions.create(
+                model=self.model_version,
+                messages=messages
+            )
+            print(f'RESPONSE: {response.choices[0].message.content}')
+            correct_response = self.parse_json_obj_from_llm(response.choices[0].message.content)
+            print('Готово!')
             return correct_response
         except Exception as e:
             raise Exception(f"Ошибка при запросе к {self.model}: {str(e)}")
 
     def clusterization_topics(self, message: str, user_message: str = None, system_message: str = None) -> dict:
         """
-        Генерация тезисов
+        Кластеризация тезисов
 
         :param user_message: Промт пользователя
         :param system_message: Системное сообщение (роль модели)
         :return: Ответ модели
         """
+
+        print(f'Кластеризируются тезисы: {message[:100]}...', end='')
         if not system_message:
             system_message = """
             Ты — профессиональный аналитик, специализирующийся на кластеризации тем и их анализе. Тебе на вход подаётся список словарей в формате `list[dict]`, где каждый словарь содержит новостную тему (`topic`) и её вес (`weight`).
-            
+
             Требования:  
             1. Кластеризация по смыслу (поле "topics"): Группируй темы, близкие по смыслу, в один кластер.  
             2. Выделение уникальных объектов: Если в теме упоминается конкретный объект, продукт или уникальная сущность (например, "iPhone 15", "Tesla Cybertruck"), выдели его в отдельный кластер.  
@@ -100,7 +110,7 @@ class GigaChatHotNewsGenerator:
                - Не должно быть такого, что про какую-то "topics" не рассказывается в "theme"
                - "theme" должны быть самодостаточными и с законченной мыслью
                - В одной "theme" не более 3 предложений
-            
+
             Формат вывода:  
             Строго выводи ответ в формате JSON (без Markdown-обрамления), где каждый кластер имеет структуру:  
             ```json
@@ -128,44 +138,33 @@ class GigaChatHotNewsGenerator:
             ```
 """
 
-            # print(system_message)
-
         if not user_message:
             user_message = "Список тем: " + message
 
         messages = [
-            SystemMessage(content=system_message),
-            HumanMessage(content=user_message)
+            {
+                "role": "system",
+                "content": system_message
+            },
+            {
+                "role": "user",
+                "content": user_message
+            }
         ]
-        print(system_message)
-        print(user_message)
 
         try:
-            response = self.llm(messages)
-            correct_response = self.parse_json_obj_from_llm(response.content)
+            response = self.llm.chat.completions.create(
+                model=self.model_version,
+                messages=messages
+            )
+            correct_response = self.parse_json_obj_from_llm(response.choices[0].message.content)
+            print('Готово!')
             return correct_response
         except Exception as e:
             raise Exception(f"Ошибка при запросе к {self.model}: {str(e)}")
 
-    # Парсер для JSON-ответов от LLM
-    # def parse_json_obj_from_llm(self, text: str) -> dict:
-    #     try:
-    #         json_string = text.strip('"')
-    #         cleaned_json = re.sub(r'```json\n|```', '', json_string)
-    #         cleaned_json = cleaned_json.strip()
-    #         json_insights_data = json.loads(cleaned_json)
-    #
-    #         return json_insights_data
-    #     except json.JSONDecodeError:
-    #         # Если JSON некорректен, пытаемся извлечь JSON0
-    #         json_match = re.search(r'\{.*\}', text, re.DOTALL)
-    #         if json_match:
-    #             return json.loads(json_match.group(0))
-    #         raise ValueError("LLM response is not valid JSON")
-
-
-
-    def parse_json_obj_from_llm(self, text: str) -> dict:
+    @staticmethod
+    def parse_json_obj_from_llm(text: str) -> dict:
         """
         Пытается извлечь JSON из ответа LLM.
         Если не получается — возвращает пустой словарь {}.
@@ -204,11 +203,12 @@ class GigaChatHotNewsGenerator:
 # Пример использования
 if __name__ == "__main__":
 
-    credentials = settings.AUTHENTICATION['GIGACHAT_API_AUTH']
-    model = 'GigaChat'
+    api_key = settings.AUTHENTICATION['OPENROUTER_AI_MODEL']
+    model = 'Deepseek'
+    model_version = 'deepseek/deepseek-chat-v3-0324:free'
 
     # Инициализация генератора
-    llm = GigaChatHotNewsGenerator(credentials=credentials, model=model)
+    llm = OpenrouterHotNewsGenerator(api_key=api_key, model=model, model_version=model_version)
 
     message = """
 {'topic': 'Доля рассрочки в продажах первичного жилья в Нижегородской области составила 48%', 'weight': 2}
@@ -350,9 +350,17 @@ if __name__ == "__main__":
 """
 
     try:
+        start_time = time.time()
+
         # Генерация тезисов
         response = llm.clusterization_topics(message)
         print("\nРезультат:")
         print(response)
+        with open(os.path.join(settings.OUTPUT_DIR_CLUSTERS, 'data.json'), 'w', encoding='utf-8') as file:
+            # Преобразуем словарь в JSON и записываем в файл
+            json.dump(response, file, ensure_ascii=False, indent=4)
+
+        end_time = time.time()
+        print(end_time - start_time)
     except Exception as e:
         print(f"Ошибка: {e}")
