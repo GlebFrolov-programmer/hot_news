@@ -6,7 +6,8 @@ from datetime import datetime, timezone, timedelta, date
 
 from tqdm import tqdm
 
-from llm.openrouter_client import OpenrouterHotNewsGenerator
+from llm.google_client import GoogleGenAIHotNewsGenerator
+# from llm.openrouter_client import OpenrouterHotNewsGenerator
 from llm.gigachat_client import GigaChatHotNewsGenerator
 import pandas as pd
 from config.settings import settings
@@ -52,6 +53,15 @@ model = 'Deepseek'
 model_version = 'Qwen/Qwen3-32B-FP8'  # Очень долго генерирует, но сама генерация вроде бы норм
 llm = TogetherAIHotNewsGenerator(api_key=api_key, model=model, model_version=model_version)
 
+# api_key = settings.AUTHENTICATION['GOOGLE_CLOUD_API_KEY']
+# model = 'Gemini'
+# model_version = "gemini-2.5-flash-lite"
+# llm = GoogleGenAIHotNewsGenerator(
+#         api_key=api_key,
+#         model=model,
+#         model_version=model_version
+#     )
+
 for region in regions:
     for category in categories:
         # Шаг 1. Подготовка сырых данных
@@ -74,51 +84,52 @@ for region in regions:
         data_topics.to_excel(os.path.join(settings.OUTPUT_DIR_TOPICS, f'TOPICS_{category}_{region}_{period}_{month_begin}.xlsx'), index=False)
 
         # Шаг 3. Кластеризация тем
-        # print('**** КЛАСТЕРИЗАЦИЯ ТЕМ ****')
-        # data_clusters = pd.read_excel(
-        #     os.path.join(settings.OUTPUT_DIR_TOPICS, f'TOPICS_{category}_{region}_{period}_{month_begin}.xlsx'))
-        #
-        # topics = []
-        # for _, row in data_clusters.iterrows():
-        #     new_topics = ast.literal_eval(row['topics'])
-        #     if isinstance(new_topics, list) and len(new_topics) != 0:
-        #         new_topics = new_topics[0]
-        #     if isinstance(new_topics, dict):
-        #         if len(new_topics) != 0 and 'topics' in new_topics.keys():
-        #             for topic in [i for i in [i.strip(' "\'') for i in new_topics['topics']] if
-        #                           i != 'нет информации' and len(i) != 0]:
-        #                 topics.append(
-        #                     {
-        #                         'topic': topic,
-        #                         'weight': 2 if row['approved'] else 1
-        #                     }
-        #                 )
-        #
-        # response = llm.clusterization_topics(str(topics))
-        # print(f'RESPONSE: {response}')
-        #
-        # with open(
-        #         os.path.join(settings.OUTPUT_DIR_CLUSTERS, f'CLUSTERS_{category}_{region}_{period}_{month_begin}.json'),
-        #         'w', encoding='utf-8') as file:
-        #     # Преобразуем словарь в JSON и записываем в файл
-        #     json.dump(response, file, ensure_ascii=False, indent=4)
+        print('**** КЛАСТЕРИЗАЦИЯ ТЕМ ****')
+        data_clusters = pd.read_excel(
+            os.path.join(settings.OUTPUT_DIR_TOPICS, f'TOPICS_{category}_{region}_{period}_{month_begin}.xlsx'))
+
+        topics = []
+        for _, row in data_clusters.iterrows():
+            if row['topics'] != '{}' and row['topics'] != '[]' and pd.notna(row['topics']):
+                new_topics = ast.literal_eval(row['topics'])
+                if isinstance(new_topics, list) and len(new_topics) != 0:
+                    new_topics = new_topics[0]
+                if isinstance(new_topics, dict):
+                    if len(new_topics) != 0 and 'topics' in new_topics.keys():
+                        for topic in [i for i in [i.strip(' "\'') for i in new_topics['topics']] if
+                                      i != 'нет информации' and len(i) != 0]:
+                            topics.append(
+                                {
+                                    'topic': topic,
+                                    'weight': 2 if row['approved'] else 1
+                                }
+                            )
+
+        response = llm.clusterization_topics(str(topics))
+        print(f'RESPONSE: {response}')
+
+        with open(
+                os.path.join(settings.OUTPUT_DIR_CLUSTERS, f'CLUSTERS_{category}_{region}_{period}_{month_begin}.json'),
+                'w', encoding='utf-8') as file:
+            # Преобразуем словарь в JSON и записываем в файл
+            json.dump(response, file, ensure_ascii=False, indent=4)
 
         # Шаг 4. Результат кластеризации
-        # print('**** РЕЗУЛЬТАТ КЛАСТЕРИЗАЦИИ ****')
-        # file = open(os.path.join(settings.OUTPUT_DIR_CLUSTERS, f'CLUSTERS_{category}_{region}_{period}_{month_begin}.json'), 'r', encoding='utf-8')
-        # result_of_clusterization = json.load(file)
-        # for cluster in result_of_clusterization:
-        #     weight_of_topics = 0
-        #     for topic in cluster['topics']:
-        #         weight_of_topics += topic['weight']
-        #
-        #     cluster['weight_cluster'] = weight_of_topics
-        #
-        # result_of_clusterization.sort(key=lambda x: x["weight_cluster"], reverse=True)
-        #
-        # for i in result_of_clusterization:
-        #     print(
-        #         f'WEIGHT: {i["weight_cluster"]} CLUSTER: {i["cluster_name"]} TOPICS({len(i["topics"])}): {i["topics"]}')
+        print('**** РЕЗУЛЬТАТ КЛАСТЕРИЗАЦИИ ****')
+        file = open(os.path.join(settings.OUTPUT_DIR_CLUSTERS, f'CLUSTERS_{category}_{region}_{period}_{month_begin}.json'), 'r', encoding='utf-8')
+        result_of_clusterization = json.load(file)
+        for cluster in result_of_clusterization:
+            weight_of_topics = 0
+            for topic in cluster['topics']:
+                weight_of_topics += topic['weight']
+
+            cluster['weight_cluster'] = weight_of_topics
+
+        result_of_clusterization.sort(key=lambda x: x["weight_cluster"], reverse=True)
+
+        for i in result_of_clusterization:
+            print(
+                f'WEIGHT: {i["weight_cluster"]} CLUSTER: {i["cluster_name"]} TOPICS({len(i["topics"])}): {i["topics"]}')
 
 
 end_time = time.time()

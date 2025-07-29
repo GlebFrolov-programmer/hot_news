@@ -16,7 +16,8 @@ class Settings:
         'TELEGRAM_API_HASH': os.getenv("TELEGRAM_API_HASH"),
         'PHONE_NUM': os.getenv("PHONE_NUM"),
         'OPENROUTER_AI_MODEL': os.getenv("OPENROUTER_AI_MODEL"),
-        'TOGETHER_API_KEY': os.getenv("TOGETHER_API_KEY")
+        'TOGETHER_API_KEY': os.getenv("TOGETHER_API_KEY"),
+        'GOOGLE_CLOUD_API_KEY': os.getenv("GOOGLE_CLOUD_API_KEY")
     }
 
     # Настройки парсеров
