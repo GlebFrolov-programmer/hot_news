@@ -82,49 +82,6 @@ class WebsiteParser:
 
         return False
 
-    # def parse(self, url, force_selenium=False):
-    #     """Основной метод парсинга с автоматическим выбором движка"""
-    #     print(f'Собираются данные с сайта {url}')
-    #     try:
-    #         if not force_selenium:
-    #             # Сначала пробуем легкий режим (Requests)
-    #             content = self._parse_with_requests(url)
-    #             if content and len(content) > 100:  # Проверяем, что контент не пустой
-    #                 return content
-    #         print('Применяется SELENIUM')
-    #         # Если легкий режим не сработал - используем Selenium
-    #         return self._parse_with_selenium(url)
-    #
-    #     except Exception as e:
-    #         print(f"Ошибка при парсинге {url}: {str(e)}")
-    #         return None
-
-    # def _parse_with_requests(self, url):
-    #     """Парсинг с помощью Requests + BeautifulSoup"""
-    #     try:
-    #         headers = {
-    #             'User-Agent': self.ua.random,
-    #             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-    #             'Accept-Language': 'en-US,en;q=0.5',
-    #             'Referer': 'https://www.google.com/',
-    #             'DNT': '1'
-    #         }
-    #
-    #         response = requests.get(
-    #             url,
-    #             headers=headers,
-    #             timeout=15,
-    #             verify=False,
-    #             allow_redirects=True
-    #         )
-    #
-    #         if response.status_code == 200:
-    #             soup = BeautifulSoup(response.text, 'html.parser')
-    #             return self._clean_content(soup)
-    #
-    #     except Exception as e:
-    #         print(f"Requests не сработал для {url}: {str(e)}")
-    #         return None
     @staticmethod
     def fix_broken_encoding(text, possible_encodings=['utf-8', 'windows-1251', 'koi8-r']):
         for enc in possible_encodings:

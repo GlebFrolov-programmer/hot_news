@@ -1,11 +1,13 @@
 import datetime
 import os
 import pandas as pd
+import requests
 from tavily import TavilyClient
 
 from parsers.base_parser import BaseParser
 from models import NewsItem
 from config.settings import settings
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 
 class TavilyParser(BaseParser):
@@ -32,6 +34,7 @@ class TavilyParser(BaseParser):
             print(f"Данные сохранены в файл: {filepath}")
             self.print_statistics()
 
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
     def parse(self, category: str, region: str, period: str, date_from: datetime) -> list[NewsItem]:
         """Реализация парсинга с помощью Tavily"""
         print(f'TAVILY SCRAPING {category, region, period}')
@@ -48,12 +51,16 @@ class TavilyParser(BaseParser):
 
         query = f'{categories_query} {region} {period}'
         print(f'    QUERY: {query}')
-        raw_data = self.tavily_client.search(
-                query=query,
-                search_depth="advanced",
-                include_answer=True,
-                max_results=settings.TAVILY_LIMIT,
-            )
+        try:
+            raw_data = self.tavily_client.search(
+                    query=query,
+                    search_depth="advanced",
+                    include_answer=True,
+                    max_results=settings.TAVILY_LIMIT,
+                )
+        except requests.exceptions.ConnectionError:
+            print("Connection failed, retrying...")
+            raise
 
         for result in raw_data['results']:
             # Собранные новости
@@ -72,5 +79,9 @@ class TavilyParser(BaseParser):
         return news_items
 
     def print_statistics(self):
-        print(f'''Всего собрано уникальных источников {len(self.raw_data)}''')
-        print(f'''Проверенные источники: {len(self.raw_data.loc[self.raw_data["approved"]])}''')
+        # print(f'''Всего собрано уникальных источников {len(self.raw_data)}''')
+        # print(f'''Проверенные источники: {len(self.raw_data.loc[self.raw_data["approved"]])}''')
+        total = len(self.raw_data)
+        verified = len(self.raw_data[self.raw_data["approved"]])
+        print(f"Всего собрано уникальных источников: {total}")
+        print(f"Проверенные источники: {verified} ({verified / total:.1%})")
