@@ -24,13 +24,13 @@ start_time = time.time()
 
 sources = settings.AVAILABLE_SOURCES
 # sources = ['Telegram', 'Google']
-regions = list(settings.REGION_KEYWORDS.keys())[44:]
-categories = list(settings.CATEGORIES_SEARCH.keys())[:1]
-period = 'Июнь 2025'
+regions = list(settings.REGION_KEYWORDS.keys())[:30]
+categories = list(settings.CATEGORIES_SEARCH.keys())
+period = 'Июль 2025'
 to_excel = True
-month_begin = date.today().replace(month=7, day=1)
+month_begin = date.today().replace(month=8, day=1)
 month_begin_utc = datetime.now(timezone.utc).replace(
-            month=7, day=1, hour=0, minute=0, second=0, microsecond=0)
+            month=8, day=1, hour=0, minute=0, second=0, microsecond=0)
 
 # GIGACHAT
 # credentials = settings.AUTHENTICATION['GIGACHAT_API_AUTH']

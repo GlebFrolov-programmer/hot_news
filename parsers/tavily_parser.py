@@ -56,7 +56,7 @@ class TavilyParser(BaseParser):
                     query=query,
                     search_depth="advanced",
                     include_answer=True,
-                    max_results=settings.TAVILY_LIMIT,
+                    max_results=len(filter_categories) * settings.TAVILY_LIMIT,
                 )
         except requests.exceptions.ConnectionError:
             print("Connection failed, retrying...")

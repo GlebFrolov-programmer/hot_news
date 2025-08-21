@@ -299,6 +299,7 @@ def collect_raw_data_sync(
         new_data = new_data[[col for col in required_cols if col in new_data.columns]]
         full_data = pd.concat([full_data, new_data], ignore_index=True)
 
+    full_data.drop_duplicates(keep='last', inplace=True)
     return full_data
 
 
@@ -320,7 +321,7 @@ async def parse_websites_only_async(
 
     async with WebsiteParser(
             headless=True,
-            timeout=60000
+            timeout=15000
     ) as parser:
         semaphore = asyncio.Semaphore(max_concurrent)
 

@@ -119,7 +119,7 @@ class GoogleParser(BaseParser):
         # for category_query in settings.CATEGORIES_SEARCH[category]:
         #
         category_query = f'({" OR ".join([i for i in settings.CATEGORIES_SEARCH[category]])})'
-        query = f'{region} {period} after:{date_from.strftime("%Y-%m-%d")} {category_query}'
+        query = f'{category_query} {region} {period} after:{date_from.strftime("%Y-%m-%d")}'
         print(f'    QUERY: {query}')
 
         try:
