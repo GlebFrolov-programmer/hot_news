@@ -22,12 +22,11 @@ class Settings:
 
     # Настройки парсеров
     GOOGLE_SEARCH_LIMIT = 5
-    TAVILY_LIMIT = 25
+    TAVILY_LIMIT = 5
 
     TRUSTED_WEB_SOURCE = ["ria.ru", "tass.ru", "rbc.ru", "vedomosti.ru", "kommersant.ru", "rg.ru", 'realty.rbc.ru',
                           'gipernn.ru', 'pravda-nn.ru', 'vremyan.ru', 'government-nnov.ru', 'nn.rbc.ru',
-                          'domostroynn.ru',
-                          'rbcrealty.ru']
+                          'domostroynn.ru', 'rbcrealty.ru']
     AVAILABLE_SOURCES = ['Telegram', 'Google', 'Tavily']
 
     # REGION_KEYWORDS = {
@@ -129,19 +128,35 @@ class Settings:
     CATEGORIES_SEARCH = {
         'Недвижимость': [
             'Обзор рынка недвижимости',
-            'Цены недвижимости',
             'Спрос на рынке недвижимости',
             'Новости недвижимости',
             'Анализ рынка недвижимости',
-            'Почему изменилась цена на недвижимость',
-            'Доступность жилья',
-            'Элитная недвижимость',
+            'Новости ипотеки',
             'Тенденции рынка недвижимости'
-            # 'Новостройки и застройщики',
-            # 'Первичное жильё',
-            # 'Вторичное жильё',
-            # 'Факторы изменения цены',
-        ]
+        ],
+        'Цены на недвижимость': [
+            'Цены недвижимости',
+            'Почему изменилась цена на недвижимость',
+            'Факторы изменения цены на недвижимость'
+        ],
+        'Первичное жильё': [
+            'Новостройки и застройщики',
+            'Первичное жильё',
+            'Почему изменилась цена на первичное жильё',
+            'Ипотека для первичного жилья',
+            'Цены и динамика первичного жильё'
+        ],
+        'Вторичное жильё': [
+            'Вторичное жильё',
+            'Почему изменилась цена на вторичное жильё',
+            'Ипотека для вторичного жилья',
+            'Цены и динамика вторичного жильё'
+        ],
+        'Доступность недвижимости': [
+            'Доступность жилья',
+            'Барьеры для приобретения жилья',
+            'Государственные субсидии и льготы на недвижимость'
+        ],
     }
     TELEGRAM_CHANNELS = {
         'Недвижимость':
@@ -154,7 +169,110 @@ class Settings:
                     "ria_realty",
                     "realty_rbc",
                 ],
-
+                'not approved': [
+                    "Jelezobetonniyzames",
+                    "kvadratnymaster",
+                    "nedvizha",
+                    "belaya_kaska",
+                    "propertyinsider",
+                    "cian_realtor",
+                    "avito_re_pro",
+                    "ipotekahouse",
+                    "filatofff",
+                    "pro_smarent",
+                    "Leonid_Rysev",
+                    "pataninnews",
+                    "rudakov_broker",
+                ]
+            },
+        'Цены на недвижимость':
+            {
+                'approved': [
+                    "russianmacro",
+                    "domresearch",
+                    "okoloCB",
+                    "domclick",
+                    "ria_realty",
+                    "realty_rbc",
+                ],
+                'not approved': [
+                    "Jelezobetonniyzames",
+                    "kvadratnymaster",
+                    "nedvizha",
+                    "belaya_kaska",
+                    "propertyinsider",
+                    "cian_realtor",
+                    "avito_re_pro",
+                    "ipotekahouse",
+                    "filatofff",
+                    "pro_smarent",
+                    "Leonid_Rysev",
+                    "pataninnews",
+                    "rudakov_broker",
+                ]
+            },
+        'Первичное жильё':
+            {
+                'approved': [
+                    "russianmacro",
+                    "domresearch",
+                    "okoloCB",
+                    "domclick",
+                    "ria_realty",
+                    "realty_rbc",
+                ],
+                'not approved': [
+                    "Jelezobetonniyzames",
+                    "kvadratnymaster",
+                    "nedvizha",
+                    "belaya_kaska",
+                    "propertyinsider",
+                    "cian_realtor",
+                    "avito_re_pro",
+                    "ipotekahouse",
+                    "filatofff",
+                    "pro_smarent",
+                    "Leonid_Rysev",
+                    "pataninnews",
+                    "rudakov_broker",
+                ]
+            },
+        'Вторичное жильё':
+            {
+                'approved': [
+                    "russianmacro",
+                    "domresearch",
+                    "okoloCB",
+                    "domclick",
+                    "ria_realty",
+                    "realty_rbc",
+                ],
+                'not approved': [
+                    "Jelezobetonniyzames",
+                    "kvadratnymaster",
+                    "nedvizha",
+                    "belaya_kaska",
+                    "propertyinsider",
+                    "cian_realtor",
+                    "avito_re_pro",
+                    "ipotekahouse",
+                    "filatofff",
+                    "pro_smarent",
+                    "Leonid_Rysev",
+                    "pataninnews",
+                    "rudakov_broker",
+                ]
+            },
+        'Доступность недвижимости':
+            {
+                'approved': [
+                    "russianmacro",
+                    "domresearch",
+                    "okoloCB",
+                    "domclick",
+                    "ria_realty",
+                    "realty_rbc",
+                ],
                 'not approved': [
                     "Jelezobetonniyzames",
                     "kvadratnymaster",
