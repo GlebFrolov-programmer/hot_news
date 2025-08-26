@@ -14,6 +14,8 @@ from config.settings import settings
 import warnings
 
 from llm.together_ai_client import TogetherAIHotNewsGenerator
+from tools.archiver import create_archives
+from tools.email_sender import send_archives_via_gmail
 from tools.raw_data import get_raw_data
 
 warnings.filterwarnings("ignore")  # Отключает все warnings
@@ -24,7 +26,7 @@ start_time = time.time()
 
 sources = settings.AVAILABLE_SOURCES
 # sources = ['Telegram', 'Google']
-regions = list(settings.REGION_KEYWORDS.keys())[:30]
+regions = list(settings.REGION_KEYWORDS.keys())
 categories = list(settings.CATEGORIES_SEARCH.keys())
 period = 'Июль 2025'
 to_excel = True
@@ -37,33 +39,11 @@ month_begin_utc = datetime.now(timezone.utc).replace(
 # model = "GigaChat"
 # llm = GigaChatHotNewsGenerator(credentials=credentials, model=model)
 
-# OPENROUTER_AI
-# api_key = settings.AUTHENTICATION['OPENROUTER_AI_MODEL']
-# model = 'DeepSeek'
-# model_version = 'google/gemini-2.0-flash-exp:free'
-# model_version = 'deepseek/deepseek-chat-v3-0324'
-# model_version = 'deepseek/deepseek-chat-v3-0324:free'
-# model_version = 'google/gemma-3n-e2b-it:free'
-# llm = OpenrouterHotNewsGenerator(api_key=api_key, model=model, model_version=model_version)
-
 # TOGETHER_AI
 api_key = settings.AUTHENTICATION['TOGETHER_API_KEY']
 model = 'Deepseek'
-# model_version = 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free'
-# model_version = 'deepseek-ai/DeepSeek-R1-0528'  # Норм, но долго работает и почему-то упирается в лимиты
-# model_version = 'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free'  # Норм, но маленькое контекстное окно (нужно будет бить по 3000 слов, если сплитануть по пробелу)
-# model_version = 'deepseek-ai/DeepSeek-V3'  # Платная
 model_version = 'Qwen/Qwen3-32B-FP8'  # Очень долго генерирует, но сама генерация вроде бы норм
 llm = TogetherAIHotNewsGenerator(api_key=api_key, model=model, model_version=model_version)
-
-# api_key = settings.AUTHENTICATION['GOOGLE_CLOUD_API_KEY']
-# model = 'Gemini'
-# model_version = "gemini-2.5-flash-lite"
-# llm = GoogleGenAIHotNewsGenerator(
-#         api_key=api_key,
-#         model=model,
-#         model_version=model_version
-#     )
 
 for region in regions:
     start_time_region = time.time()
@@ -79,8 +59,39 @@ for region in regions:
                                 to_excel=to_excel,
                                 month_begin=month_begin,
                                 month_begin_utc=month_begin_utc,
-                                max_concurrent=10)
+                                max_concurrent=5)
+
+        del raw_data['url']
         raw_data.to_excel(os.path.join(settings.OUTPUT_DIR_RAW, f'RAW_{category}_{region}_{period}_{month_begin}.xlsx'), index=False)
+    end_time_region = time.time()
+    print(f'Время затраченное на регион {region}: {round((end_time_region - start_time_region) / 60, 2)} мин.')
+
+# Архивация всех эксель
+create_archives(
+    directory=settings.OUTPUT_DIR_RAW,
+    extensions=["xlsx", "xls"],
+    max_size_mb=15
+)
+
+
+# Отправка всех архивов по почте
+GMAIL_EMAIL = settings.AUTHENTICATION['GMAIL']
+GMAIL_APP_PASSWORD = settings.AUTHENTICATION['PASS_GMAIL']
+RECIPIENT_EMAIL = settings.AUTHENTICATION['MAIL_SBER']
+DIRECTORY_PATH = settings.OUTPUT_DIR_RAW
+
+sent_files = send_archives_via_gmail(
+        gmail_email=GMAIL_EMAIL,
+        gmail_app_password=GMAIL_APP_PASSWORD,
+        recipient_email=RECIPIENT_EMAIL,
+        directory_path=DIRECTORY_PATH,
+        subject_prefix="Архив 2025-08-01",
+        body_text="Архив: ",
+        file_pattern="archive_*.zip",  # Только zip файлы
+        sort_files=True  # Сортировать по номеру
+    )
+
+        # raw_data.to_csv(os.path.join(settings.OUTPUT_DIR_RAW, f'RAW_{category}_{region}_{period}_{month_begin}.csv'), index=False, encoding='utf-8', sep=';')
 
         # Шаг 2. Генерация тем из текстов
         # print('**** ГЕНЕРАЦИЯ ТЕМ ИЗ ТЕКСТОВ ****')
@@ -138,8 +149,10 @@ for region in regions:
         # for i in result_of_clusterization:
         #     print(
         #         f'WEIGHT: {i["weight_cluster"]} CLUSTER: {i["cluster_name"]} TOPICS({len(i["topics"])}): {i["topics"]}')
-    end_time_region = time.time()
-    print(f'Время затраченное на регион {region}: {round((end_time_region - start_time_region) / 60, 2)} мин.')
+
+
 
 end_time = time.time()
 print(round((end_time - start_time) / 60, 2))
+
+
